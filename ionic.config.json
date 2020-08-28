@@ -1,0 +1,7 @@
+{
+  "name": "Ionic5GoogleMapsTest",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "angular"
+}
