@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, NgZone } from '@angular/core'
 
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { NativeGeocoder, NativeGeocoderResult, NativeGeocoderOptions } from '@ionic-native/native-geocoder/ngx';
+import { AlertController } from '@ionic/angular';
 
 declare var google;
 
@@ -27,6 +28,7 @@ export class HomePage implements OnInit{
     private geolocation: Geolocation,
     private nativeGeocoder: NativeGeocoder,    
     public zone: NgZone,
+    private alertaCtrl:AlertController 
   ) {
     this.GoogleAutocomplete = new google.maps.places.AutocompleteService();
     this.autocomplete = { input: '' };
@@ -54,19 +56,19 @@ export class HomePage implements OnInit{
       this.getAddressFromCoords(resp.coords.latitude, resp.coords.longitude); 
       this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions); 
       this.map.addListener('tilesloaded', () => {
-        console.log('accuracy',this.map, this.map.center.lat());
+        console.log('exactitud',this.map, this.map.center.lat());
         this.getAddressFromCoords(this.map.center.lat(), this.map.center.lng())
         this.lat = this.map.center.lat()
         this.long = this.map.center.lng()
       }); 
     }).catch((error) => {
-      console.log('Error getting location', error);
+      console.log('Error obteniendo ubicación', error);
     });
   }
 
   
   getAddressFromCoords(lattitude, longitude) {
-    console.log("getAddressFromCoords "+lattitude+" "+longitude);
+    console.log("obtener dirección de Coordenadas"+lattitude+" "+longitude);
     let options: NativeGeocoderOptions = {
       useLocale: true,
       maxResults: 5    
@@ -86,13 +88,25 @@ export class HomePage implements OnInit{
         this.address = this.address.slice(0, -2);
       })
       .catch((error: any) =>{ 
-        this.address = "Address Not Available!";
+        this.address = "Dirección no valida!";
       }); 
   }
 
   
   ShowCords(){
-    alert('lat' +this.lat+', long'+this.long )
+    this.presentAlert();
+  }
+
+  async presentAlert() {
+    const alert = await this.alertaCtrl.create({
+      cssClass: 'my-custom-class',
+      header: 'Datos Obtenidos',
+      subHeader: 'Parametros',
+      message: 'latitud: ' + this.lat + ',longitud: '+ this.long,
+      buttons: ['Aceptar']
+    });
+
+    await alert.present();
   }
   
   
@@ -114,20 +128,15 @@ export class HomePage implements OnInit{
   
   
   SelectSearchResult(item) {
-    
-    
     alert(JSON.stringify(item))      
     this.placeid = item.place_id
   }
-  
-  
-  
+   
   ClearAutocomplete(){
     this.autocompleteItems = []
     this.autocomplete.input = ''
   }
  
-  
   GoTo(){
     return window.location.href = 'https://www.google.com/maps/search/?api=1&query=Google&query_place_id='+this.placeid;
   }
