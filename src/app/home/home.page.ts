@@ -24,15 +24,21 @@ export class HomePage implements OnInit{
   placeid: any;
   GoogleAutocomplete: any;
 
+  geocoder: any;
+  markers : any [];
+
+
   constructor(
     private geolocation: Geolocation,
     private nativeGeocoder: NativeGeocoder,    
     public zone: NgZone,
-    private alertaCtrl:AlertController 
+    private alertaCtrl:AlertController    
   ) {
     this.GoogleAutocomplete = new google.maps.places.AutocompleteService();
     this.autocomplete = { input: '' };
     this.autocompleteItems = [];
+    this.geocoder = new google.maps.Geocoder;
+    this.markers = [];
   }
  
   
@@ -43,7 +49,6 @@ export class HomePage implements OnInit{
   
   loadMap() {
     
-    
     this.geolocation.getCurrentPosition().then((resp) => {
       let latLng = new google.maps.LatLng(resp.coords.latitude, resp.coords.longitude);
       let mapOptions = {
@@ -51,7 +56,6 @@ export class HomePage implements OnInit{
         zoom: 15,
         mapTypeId: google.maps.MapTypeId.ROADMAP
       } 
-      
       
       this.getAddressFromCoords(resp.coords.latitude, resp.coords.longitude); 
       this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions); 
@@ -128,8 +132,25 @@ export class HomePage implements OnInit{
   
   
   SelectSearchResult(item) {
-    alert(JSON.stringify(item))      
-    this.placeid = item.place_id
+
+  this.ClearAutocomplete();
+  this.autocompleteItems = [];
+
+  this.geocoder.geocode({'placeId': item.place_id}, (results, status) => {
+    if(status === 'OK' && results[0]){
+      let position = {
+          lat: results[0].geometry.location.lat,
+          lng: results[0].geometry.location.lng
+      };
+      let marker = new google.maps.Marker({
+        position: results[0].geometry.location,
+        map: this.map,
+      });
+      this.markers.push(marker);
+      this.map.setCenter(results[0].geometry.location);
+    }
+  })
+
   }
    
   ClearAutocomplete(){
